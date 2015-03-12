@@ -1,2 +1,4 @@
-# robot-whispers
-For speaking intimately with the robots.
+RO RO RO 
+BOT BOT BOT
+WHIS WHIS WHIS
+PERS PERS PERS
