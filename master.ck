@@ -1,6 +1,8 @@
 // master.ck
 // Eric heep
 
+Machine.add(me.dir() + "/NanoKontrol.ck");
+
 // classes
 Machine.add(me.dir() + "/Mel.ck");
 Machine.add(me.dir() + "/Matrix.ck");

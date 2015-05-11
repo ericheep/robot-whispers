@@ -1,17 +1,24 @@
 // classes
 Mel mel;
 Matrix mat;
-RobotSend rob;
+RobotSend lbot;
+RobotSend rbot;
 Visualization vis;
 
-// sound chain
-adc => FFT fft => blackhole;
+adc.left => Gain lgain => FFT lfft => blackhole;
+adc.right => Gain rgain => FFT rfft => blackhole;
+
+// sending audio out to Danny's soundcard
+lgain => dac.left;
+rgain => dac.right;
 
 // fft parameters 
 second / samp => float sr;
-512 => int N => int win => fft.size;
-Windowing.hamming(N) => fft.window;
-UAnaBlob blob;
+512 => int N => int win => rfft.size => lfft.size;
+
+Windowing.hamming(N) => lfft.window;
+Windowing.hamming(N) => rfft.window;
+UAnaBlob lblob, rblob, lrmsblob, rrmsblob;
 
 // calculates transformation matrix
 mel.calc(512, sr, "mel") @=> float mx[][];
@@ -22,22 +29,27 @@ mat.transpose(mx) @=> mx;
 // cuts off unnecessary half of transformation weights
 mat.cutMat(mx, 0, win/2) @=> mx;
 
-float X[0];
+float lX[0];
+float rX[0];
 
 // main program
 while (true) {
+    // creates our array of fft bins
+    lfft.upchuck() @=> lblob;
+    rfft.upchuck() @=> rblob;
+
     win::samp => now;
 
-    // creates our array of fft bins
-    fft.upchuck() @=> blob;
-
     // keystrength cross correlation
-    mat.dot(blob.fvals(), mx) @=> X;
+    mat.dot(lblob.fvals(), mx) @=> lX;
+    mat.dot(rblob.fvals(), mx) @=> rX;
 
     // rms scaling
-    mat.rmstodb(blob.fvals()) @=> X;
+    mat.rmstodb(lblob.fvals()) @=> lX;
+    mat.rmstodb(rblob.fvals()) @=> rX;
 
-    rob.check(X, MEL_BANDS);
+    lbot.check(lX, MEL_BANDS, "left");
+    rbot.check(rX, MEL_BANDS, "right");
 
-    vis.data(X, "/data");
+    //vis.data(X, "/data");
 }
